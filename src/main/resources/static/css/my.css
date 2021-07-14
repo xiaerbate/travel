@@ -1,0 +1,21 @@
+table{
+    width: 70% !important;
+    margin: 0 auto;
+    vertical-align: middle;
+}
+
+.rightFloat{
+    float: right;
+}
+
+.leftFloat{
+    float: left;
+}
+
+.myMessage {
+    position: fixed;
+    width: 30%;
+    right: 0;
+    top: 7%;
+    text-align: center;
+}

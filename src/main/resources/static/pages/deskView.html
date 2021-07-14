@@ -1,0 +1,90 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Title</title>
+    <script src="js/jquery.min.js"></script>
+    <script src="js/bootstrap.min.js"></script>
+    <script src="js/my.js"></script>
+    <link rel="stylesheet" href="css/bootstrap.min.css">
+    <link rel="stylesheet" href="css/my.css">
+</head>
+<body>
+<div id="header"></div>
+<div id="message"></div>
+<div class="page-header" style="margin: 5% 0 2% 15%">
+    <h1>个人信息管理</h1>
+
+</div>
+
+<table class="table table-bordered text-center">
+    <thead>
+    <tr>
+        <td>团队名</td>
+        <td>人数上限</td>
+        <td>操作</td>
+    </tr>
+    </thead>
+    <tbody id="tbody">
+
+    </tbody>
+
+</table>
+
+</body>
+<script>
+    $("#header").load('pages/header.html');
+
+    //页面加载完成后查询数据
+    $(document).ready(
+        queryDesk()
+    )
+
+    function queryDesk() {
+        myajax('get','desk',null,
+            res=>{
+                $('#tbody').html('')
+
+                $.each(res.data,function (k,v) {
+                    var html = `
+                            <tr>
+                            <td>`+v.name+`</td>
+                            <td>`+v.size+`</td>
+                            `
+                    if(v.isUsing==0){
+                        html+= `<td><input class="btn btn-default" type="button" value= "参加团队"
+                                  onclick="toNewOrderView(`+v.id+`)"></td></tr>
+                            `
+                    }else {
+                        html+=
+                            `
+                                 <td><input class="btn btn-default" type="button" value="查看"
+                                  onclick="toOldOrderView('`+v.id+`')"></td></tr>
+                            `
+                    }
+
+                    $('#tbody').append(html)
+                })
+            }
+        )
+    }
+
+    function toNewOrderView(id) {
+            //创建新订单
+            myajax('post','orderList',{tableId:id},
+                function (res) {
+                    //跳到新页面并携带orderId
+                    window.location.href="orderView?orderId="+res.data
+                }
+            )
+    }
+
+    function toOldOrderView(id) {
+        myajax('get','orderList/findOrderIdByDeskId',{deskid:id},
+            function (res) {
+                window.location.href="orderView?orderId="+res.data.id;
+            }
+        )
+    }
+</script>
+</html>

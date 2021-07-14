@@ -1,0 +1,193 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Title</title>
+    <script src="js/jquery.min.js"></script>
+    <script src="js/bootstrap.min.js"></script>
+    <script src="js/my.js"></script>
+    <link rel="stylesheet" href="css/bootstrap.min.css">
+    <link rel="stylesheet" href="css/my.css">
+</head>
+<body>
+<div id="header"></div>
+<div class="page-header" >
+    <h1 style="margin: 5px 0 0 60px">选择内容
+        <small >
+            <button type="button" class="btn btn-primary btn-sm" style="margin-left: 58%" onclick="finishOrder()">
+                缴费
+            </button>
+            总金额：<span id="totalMoney">0</span>元
+        </small>
+    </h1>
+
+</div>
+
+        <div style="width: 75%;margin: 0 0 0 20px;">
+            <table class="table table-bordered text-center table-condensed"
+                   style="font-size: 50% ;margin: 0">
+                <thead>
+                <tr>
+                    <td>内容</td>
+                    <td>描述</td>
+                    <td>价格</td>
+                    <td>预计耗时</td>
+                    <td style="width: 35%">操作</td>
+                </tr>
+                </thead>
+
+                <tbody id="tbody">
+
+                </tbody>
+            </table>
+        </div>
+
+        <div style="width:500px;height: 68%;position: fixed;right: 0; bottom:2px;overflow: auto">
+            <table class="table  table-bordered text-center"
+                   style="font-size: 50%;margin: 0 20px 0 0; float: right">
+                <thead>
+                <tr>
+                    <td>内容</td>
+                    <td>数量</td>
+                    <td>单价</td>
+                    <td>总价</td>
+                    <td>状态</td>
+                    <td>操作</td>
+                </tr>
+                </thead>
+                <tbody id="tbody2">
+
+                </tbody>
+            </table>
+        </div>
+
+
+
+<script>
+    $("#header").load('pages/header.html')
+    $(document).ready(
+        function () {
+            queryDish()
+            queryDetail()
+        }
+    )
+
+    //查询菜单
+    function queryDish() {
+        myajax('get','dish',null,
+            res=>{
+                $('#tbody').html('')
+                $.each(res.data,function (k,v) {
+                    $('#tbody').append(`
+                        <tr>
+                            <td>`+v.name+`</td>
+                            <td>`+v.description+`</td>
+                            <td>`+v.price+`</td>
+                            <td>`+v.time+`</td>
+                            <td>
+                                <input class="btn btn-sm" type="button" value="-" onclick="desc(`+v.id+`)">
+                                <input type="text" id="count`+v.id+`" style="width: 10%;text-align: center">
+                                <input class="btn btn-sm" type="button" value="+" onclick="add(`+v.id+`)">
+                                <input class="btn btn-sm" type="button" value="提交" onclick="submit(`+v.id+`)">
+                            </td>
+                        </tr>
+                    `)
+                })
+            }
+        )
+    }
+
+
+    function queryDetail() {
+        var orderId = window.location.href.split('=')[1]
+        myajax('get','orderDetail/queryOrderDetailByOrderId',
+            {orderId:orderId},
+            res=>{
+                $('#tbody2').html('')
+                $.each(res.data,function (k,v) {
+                    var html = `
+                        <tr>
+                            <td>`+v.name+`</td>
+                            <td>`+v.count+`</td>
+                            <td>`+v.price+`</td>
+                            <td>`+v.totalPrice+`</td>
+                            <td>`+v.statusTxt+`</td>
+                            <td>
+                                <input class="btn btn-sm" `
+                    if(v.status == 1){
+                        html += 'disabled="disabled"'
+                    }
+                    html += ` type="button" value="确认" onclick="finishDish(`+v.id+`)"></td></tr>`
+                    $('#tbody2').append(html)
+                })
+
+                //更新总价格
+                updateTotalMoney(res.data)
+            }
+
+        )
+    }
+
+    //确认所选
+    function finishDish(id) {
+        myajax('put','orderDetail',{id:id},
+            function () {
+                queryDetail()
+            }
+        )
+    }
+
+    function finishOrder() {
+
+        alert("缴费成功")
+        window.location.href="deskView"
+
+    }
+
+    //提交点菜
+    function submit(dishId) {
+        var  count = $("#count"+dishId).val()
+        if(!Number(count)){
+            return
+        }
+        var orderId = window.location.href.split('=')[1]
+        let param = {
+            dishId:dishId,
+            count:$("#count"+dishId).val(),
+            orderId:orderId
+        }
+        myajax('post','orderDetail',param,
+            function () {
+                queryDetail()
+            }
+        )
+    }
+
+    //更新总价格
+    function updateTotalMoney(arr) {
+        var  sum = 0
+        for (var i = 0; i < arr.length; i++) {
+            sum += arr[i].totalPrice
+        }
+        $('#totalMoney').text(sum)
+    }
+
+    //减号
+    function desc(id) {
+        var inpid = 'count' + id;
+        var count = $("#"+inpid).val()
+        if(count>0){
+            $("#"+inpid).val(--count)
+        }
+    }
+
+    //加号
+    function add(id) {
+        var inpid = 'count' + id;
+        var count = $("#"+inpid).val()
+        $("#"+inpid).val(++count)
+
+    }
+</script>
+</body>
+</html>
